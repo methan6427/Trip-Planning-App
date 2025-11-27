@@ -15,6 +15,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import java.util.Calendar;
 
+
 public class AddTaskActivity extends AppCompatActivity {
     private static final int PICK_IMAGE_REQUEST = 1;
     private EditText titleEdit, locationEdit, dateEdit, notesEdit;
