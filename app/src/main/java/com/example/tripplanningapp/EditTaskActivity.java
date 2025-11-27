@@ -1,5 +1,6 @@
 package com.example.tripplanningapp;
 
+import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -10,11 +11,14 @@ import android.widget.ImageView;
 import android.widget.RadioButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
+
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
+
 import java.util.Calendar;
 
 public class EditTaskActivity extends AppCompatActivity {
-    private static final int PICK_IMAGE_REQUEST = 1;
     private EditText titleEdit, locationEdit, dateEdit, notesEdit;
     private CheckBox reservationCheck;
     private RadioGroup categoryRadioGroup;
@@ -23,12 +27,26 @@ public class EditTaskActivity extends AppCompatActivity {
     private String taskId;
     private String imagePath = "";
 
+    private ActivityResultLauncher<Intent> imagePickerLauncher;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_task);
 
         prefsHelper = new SharedPreferencesHelper(this);
+
+        imagePickerLauncher = registerForActivityResult(
+                new ActivityResultContracts.StartActivityForResult(),
+                result -> {
+                    if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null && result.getData().getData() != null) {
+                        android.net.Uri selectedImageUri = result.getData().getData();
+                        getContentResolver().takePersistableUriPermission(selectedImageUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                        imagePath = selectedImageUri.toString();
+                        taskImageView.setImageURI(selectedImageUri);
+                        taskImageView.setVisibility(android.view.View.VISIBLE);
+                    }
+                });
 
         titleEdit = findViewById(R.id.titleEdit);
         locationEdit = findViewById(R.id.locationEdit);
@@ -80,19 +98,7 @@ public class EditTaskActivity extends AppCompatActivity {
         Intent intent = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
-        startActivityForResult(intent, PICK_IMAGE_REQUEST);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @androidx.annotation.Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == PICK_IMAGE_REQUEST && resultCode == RESULT_OK && data != null && data.getData() != null) {
-            android.net.Uri selectedImageUri = data.getData();
-            getContentResolver().takePersistableUriPermission(selectedImageUri, Intent.FLAG_GRANT_READ_URI_PERMISSION);
-            imagePath = selectedImageUri.toString();
-            taskImageView.setImageURI(selectedImageUri);
-            taskImageView.setVisibility(android.view.View.VISIBLE);
-        }
+        imagePickerLauncher.launch(intent);
     }
 
     private void showDatePicker() {
